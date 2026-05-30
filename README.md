@@ -8,6 +8,14 @@ Unlike traditional chatbots that often hallucinate or struggle with long documen
 
 Whether you're working with research papers, technical reports, legal documents, business reports, or environmental studies, DocMind AI helps you retrieve precise information while reducing hallucinations.
 
+DEMO
+
+
+
+https://github.com/user-attachments/assets/aec58e1b-81cb-4d9c-992f-6929933a3d27
+
+
+
 ---
 
 ## 🚀 Features
