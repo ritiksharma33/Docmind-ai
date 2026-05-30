@@ -9,159 +9,188 @@ from agents.workflow import AgentWorkflow
 from config import constants, settings
 from utils.logging import logger
 
-# 1) Define some example data 
-#    (i.e. question + paths to documents relevant to that question).
-EXAMPLES = {
-    "Google 2024 Environmental Report": {
-        "question": "Retrieve the data center PUE efficiency values in Singapore 2nd facility in 2019 and 2022. Also retrieve regional average CFE in Asia pacific in 2023",
-        "file_paths": ["examples/google-2024-environmental-report.pdf"]  
-    },
-    "DeepSeek-R1 Technical Report": {
-        "question": "Summarize DeepSeek-R1 model's performance evaluation on all coding tasks against OpenAI o1-mini model",
-        "file_paths": ["examples/DeepSeek Technical Report.pdf"]
-    }
-}
-
 def main():
     processor = DocumentProcessor()
     retriever_builder = RetrieverBuilder()
     workflow = AgentWorkflow()
 
-    # Define custom CSS for styling
+    # Premium High-End SaaS Styling (Glassmorphism & Dark Luxury)
     css = """
-    .title {
-        font-size: 1.5em !important; 
-        text-align: center !important;
-        color: #FFD700; 
+    .gradio-container {
+        max-width: 1300px !important;
+        margin: auto !important;
+        background-color: #0b0f19 !important;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
     }
 
-    .subtitle {
-        font-size: 1em !important; 
-        text-align: center !important;
-        color: #FFD700; 
-    }
-
-    .text {
+    /* Hero Banner Styling */
+    .hero {
         text-align: center;
+        padding: 40px 20px;
+        border-radius: 24px;
+        margin-bottom: 25px;
+        background: radial-gradient(circle at top, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+        border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .hero-title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        background: linear-gradient(to right, #ffffff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 8px;
+    }
+
+    .hero-subtitle {
+        font-size: 1.2rem;
+        color: #64748b;
+        font-weight: 400;
+    }
+
+    /* Glassmorphism Feature Cards */
+    .feature-card {
+        flex: 1;
+        padding: 20px;
+        border-radius: 16px;
+        text-align: left;
+        background: rgba(17, 24, 39, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s, border-color 0.2s;
+    }
+    
+    .feature-card:hover {
+        border-color: rgba(99, 102, 241, 0.3);
+        transform: translateY(-2px);
+    }
+
+    .feature-card h3 {
+        font-size: 1.05rem;
+        color: #f8fafc;
+        margin-bottom: 4px;
+        font-weight: 600;
+    }
+
+    .feature-card p {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    /* Main Workspace Panels */
+    .workspace-panel {
+        background: #111827 !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        border-radius: 20px !important;
+        padding: 24px !important;
+    }
+
+    /* Hide default Gradio footers */
+    footer {
+        display: none !important;
     }
     """
 
-    js = """
-    function createGradioAnimation() {
-        var container = document.createElement('div');
-        container.id = 'gradio-animation';
-        container.style.fontSize = '2em';
-        container.style.fontWeight = 'bold';
-        container.style.textAlign = 'center';
-        container.style.marginBottom = '20px';
-        container.style.color = '#eba93f';
+    with gr.Blocks(
+        theme=gr.themes.Default(
+            primary_hue="indigo",
+            secondary_hue="slate"
+        ),
+        title="DocMind AI",
+        css=css
+    ) as demo:
 
-        var text = 'Welcome to DocChat 🐥!';
-        for (var i = 0; i < text.length; i++) {
-            (function(i){
-                setTimeout(function(){
-                    var letter = document.createElement('span');
-                    letter.style.opacity = '0';
-                    letter.style.transition = 'opacity 0.1s';
-                    letter.innerText = text[i];
-
-                    container.appendChild(letter);
-
-                    setTimeout(function() {
-                        letter.style.opacity = '0.9';
-                    }, 50);
-                }, i * 250);
-            })(i);
-        }
-
-        var gradioContainer = document.querySelector('.gradio-container');
-        gradioContainer.insertBefore(container, gradioContainer.firstChild);
-
-        return 'Animation created';
-    }
-    """
-
-    with gr.Blocks(theme=gr.themes.Citrus(), title="DocChat 🐥", css=css, js=js) as demo:
-        gr.Markdown("## DocChat: powered by Docling 🐥 and LangGraph", elem_classes="subtitle")
-        gr.Markdown("# How it works ✨:", elem_classes="title")
-        gr.Markdown("📤 Upload your document(s), enter your query then hit Submit 📝", elem_classes="text")
-        gr.Markdown("Or you can select one of the examples from the drop-down menu, select Load Example then hit Submit 📝", elem_classes="text")
-        gr.Markdown("⚠️ **Note:** DocChat only accepts documents in these formats: '.pdf', '.docx', '.txt', '.md'", elem_classes="text")
-
-        # 2) Maintain the session state for retrieving doc changes
+        # Core operational context state session
         session_state = gr.State({
             "file_hashes": frozenset(),
             "retriever": None
         })
 
-        # 3) Layout 
+        # Header Hero Section
+        gr.HTML("""
+        <div class="hero">
+            <div class="hero-title">DocMind AI</div>
+            <div class="hero-subtitle">Multi-Agent Document Intelligence Platform</div>
+        </div>
+        """)
+
+        # Platform Value Pillar Cards
         with gr.Row():
-            with gr.Column():
-                # Section for Examples
-                gr.Markdown("### Example 📂")
-                example_dropdown = gr.Dropdown(
-                    label="Select an Example 🐥",
-                    choices=list(EXAMPLES.keys()),
-                    value=None,  # initially unselected
-                )
-                load_example_btn = gr.Button("Load Example 🛠️")
+            gr.HTML("""
+            <div class="feature-card">
+                <h3>🔍 Hybrid Semantic Retrieval</h3>
+                <p>Combines dense deep-learning vector spaces with structural keyword BM25 indexing mapping.</p>
+            </div>
+            """)
+            gr.HTML("""
+            <div class="feature-card">
+                <h3>🧠 Multi-Agent Orchestration</h3>
+                <p>Splits analytical workflows into collaborative research and counter-verification engine runtimes.</p>
+            </div>
+            """)
+            gr.HTML("""
+            <div class="feature-card">
+                <h3>✅ Hallucination Guardrails</h3>
+                <p>Runs source trace matching against context files to shield against generated misinformation.</p>
+            </div>
+            """)
 
-                # Standard input components
-                files = gr.Files(label="📄 Upload Documents", file_types=constants.ALLOWED_TYPES)
-                question = gr.Textbox(label="❓ Question", lines=3)
+        gr.Markdown("---")
 
-                submit_btn = gr.Button("Submit 🚀")
+        with gr.Row():
+            # Left Functional Workspace: User Inputs
+            with gr.Column(scale=1, elem_classes="workspace-panel"):
+                gr.Markdown("### 📂 Document Workspace")
                 
-            with gr.Column():
-                answer_output = gr.Textbox(label="🐥 Answer", interactive=False)
-                verification_output = gr.Textbox(label="✅ Verification Report")
+                files = gr.Files(
+                    label="Upload Knowledge Sources",
+                    file_types=constants.ALLOWED_TYPES
+                )
 
-        # 4) Helper function to load example into the UI
-        def load_example(example_key: str):
-            """
-            Given a key like 'Example 1', 
-            read the relevant docs from disk and return
-            them as file-like objects, plus the example question.
-            """
-            if not example_key or example_key not in EXAMPLES:
-                return [], ""  # blank if not found
+                question = gr.Textbox(
+                    label="Ask Your Question",
+                    lines=4,
+                    placeholder="What would you like to extract or analyze from your documents?..."
+                )
 
-            ex_data = EXAMPLES[example_key]
-            question = ex_data["question"]
-            file_paths = ex_data["file_paths"]
+                submit_btn = gr.Button(
+                    "🚀 Analyze Documents",
+                    variant="primary",
+                    size="lg"
+                )
 
-            # Prepare the file list to return. We read them from disk to
-            # give Gradio something it can handle as "uploaded" files.
-            loaded_files = []
-            for path in file_paths:
-                if os.path.exists(path):
-                    # Gradio can accept a path directly, or a file-like object
-                    loaded_files.append(path)
-                else:
-                    logger.warning(f"File not found: {path}")
+            # Right Functional Console: AI Target Readout
+            with gr.Column(scale=2, elem_classes="workspace-panel"):
+                gr.Markdown("### 🤖 AI Response")
+                
+                answer_output = gr.Markdown(
+                    value="*Awaiting input data. Upload document targets and supply your question in the workspace panel to initialize synthesis.*"
+                )
 
-            # The function can return lists matching the outputs we define below
-            return loaded_files, question
+                gr.Markdown("<br>")
 
-        load_example_btn.click(
-            fn=load_example,
-            inputs=[example_dropdown],
-            outputs=[files, question]
-        )
+                with gr.Accordion(
+                    "📊 Multi-Agent Validation Trace & Audit Report",
+                    open=False
+                ):
+                    verification_output = gr.Markdown(
+                        value="*No active validation telemetry trace currently logging.*"
+                    )
 
-        # 5) Standard flow for question submission
+        # Standard processing flow logic
         def process_question(question_text: str, uploaded_files: List, state: Dict):
-            """Handle questions with document caching."""
             try:
                 if not question_text.strip():
-                    raise ValueError("❌ Question cannot be empty")
+                    raise ValueError("The question parameter cannot be empty.")
                 if not uploaded_files:
-                    raise ValueError("❌ No documents uploaded")
+                    raise ValueError("Analysis halted: No knowledge document source files provided.")
 
                 current_hashes = _get_file_hashes(uploaded_files)
                 
+                # Check for cached retriever setup to prevent redundant processing overhead
                 if state["retriever"] is None or current_hashes != state["file_hashes"]:
-                    logger.info("Processing new/changed documents...")
+                    logger.info("Parsing and indexing new text vectors...")
                     chunks = processor.process(uploaded_files)
                     retriever = retriever_builder.build_hybrid_retriever(chunks)
                     
@@ -170,6 +199,7 @@ def main():
                         "retriever": retriever
                     })
                 
+                # Execute full LangGraph pipeline mapping
                 result = workflow.full_pipeline(
                     question=question_text,
                     retriever=state["retriever"]
@@ -178,19 +208,29 @@ def main():
                 return result["draft_answer"], result["verification_report"], state
                     
             except Exception as e:
-                logger.error(f"Processing error: {str(e)}")
-                return f"❌ Error: {str(e)}", "", state
+                logger.error(f"Runtime execution trace fault: {str(e)}")
+                return f"❌ **System Execution Failure:** {str(e)}", "", state
 
+        # Event Binding Click Hook
         submit_btn.click(
             fn=process_question,
-            inputs=[question, files, session_state],
-            outputs=[answer_output, verification_output, session_state]
+            inputs=[
+                question,
+                files,
+                session_state
+            ],
+            outputs=[
+                answer_output,
+                verification_output,
+                session_state
+            ],
+            show_progress="full"
         )
 
     demo.launch(server_name="127.0.0.1", server_port=5000, share=True)
 
 def _get_file_hashes(uploaded_files: List) -> frozenset:
-    """Generate SHA-256 hashes for uploaded files."""
+    """Generate SHA-256 signatures for tracking active structural document updates."""
     hashes = set()
     for file in uploaded_files:
         with open(file.name, "rb") as f:

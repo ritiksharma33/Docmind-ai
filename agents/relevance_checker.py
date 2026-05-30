@@ -15,7 +15,7 @@ class RelevanceChecker:
     def __init__(self):
         # Initialize the WatsonX ModelInference
         self.model = ModelInference(
-            model_id="ibm/granite-3-3-8b-instruct",
+            model_id="mistralai/mistral-small-3-1-24b-instruct-2503",
             credentials=credentials,
             project_id="skills-network",
             params={"temperature": 0, "max_tokens": 10},
