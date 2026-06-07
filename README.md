@@ -111,7 +111,7 @@ DocMind AI addresses these limitations through a retrieval-first, verification-d
 * Retrieval-Augmented Generation (RAG)
 * Hybrid Retrieval
 * BM25
-* Vector Search
+* Vector Search feature 
 
 ### Backend
 
